@@ -1,6 +1,43 @@
 {
 	"name": "PL_Source_To_Silver_Main",
 	"properties": {
+		"activities": [
+			{
+				"name": "Read Source Tables List",
+				"description": "Read Source Tables List from Azure SQL Database",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 2,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "select table_id from ctrl.table_config where is_active = 1 and source_system = '@{pipeline().parameters.source_system}'",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQLServer",
+						"type": "DatasetReference"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"source_system": {
+				"type": "string",
+				"defaultValue": "neon_postgres"
+			}
+		},
 		"annotations": []
 	}
 }
