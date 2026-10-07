@@ -28,7 +28,8 @@
 					"dataset": {
 						"referenceName": "DS_SQLServer",
 						"type": "DatasetReference"
-					}
+					},
+					"firstRowOnly": false
 				}
 			}
 		],
