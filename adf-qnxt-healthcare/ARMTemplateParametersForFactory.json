@@ -19,6 +19,15 @@
 		},
 		"LS_PostgreSql_properties_typeProperties_username": {
 			"value": "neondb_owner"
+		},
+		"LS_SQLdb_QNXT_properties_typeProperties_server": {
+			"value": "qnxthealth-sqlserver.database.windows.net"
+		},
+		"LS_SQLdb_QNXT_properties_typeProperties_database": {
+			"value": "sql-db-qnxthealth"
+		},
+		"LS_SQLdb_QNXT_properties_typeProperties_userName": {
+			"value": "sbantaram"
 		}
 	}
 }
