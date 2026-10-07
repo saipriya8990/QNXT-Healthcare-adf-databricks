@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Copy data",
+				"name": "Copy_data_from_postgres_to_adls",
 				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
