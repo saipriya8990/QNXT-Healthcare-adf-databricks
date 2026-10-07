@@ -7,10 +7,6 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "adf-qnxt-healthcare"
 		},
-		"LS_PostgreSql_password": {
-			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'LS_PostgreSql'"
-		},
 		"LS_PostgreSql_properties_typeProperties_server": {
 			"type": "string",
 			"defaultValue": "ep-green-glade-ar1lxj0g-pooler.c-4.us-west-2.aws.neon.tech"
@@ -22,6 +18,14 @@
 		"LS_PostgreSql_properties_typeProperties_username": {
 			"type": "string",
 			"defaultValue": "neondb_owner"
+		},
+		"LS_ADLS_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://qnxthealthcarestorage.dfs.core.windows.net/"
+		},
+		"LS_AzureKeyvault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://qnxt-keyvault.vault.azure.net/"
 		}
 	},
 	"variables": {
@@ -41,11 +45,43 @@
 					"database": "[parameters('LS_PostgreSql_properties_typeProperties_database')]",
 					"username": "[parameters('LS_PostgreSql_properties_typeProperties_username')]",
 					"password": {
-						"type": "SecureString",
-						"value": "[parameters('LS_PostgreSql_password')]"
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_AzureKeyvault",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "postgres-password"
 					},
 					"sslMode": 2,
 					"authenticationType": "Basic"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_AzureKeyvault')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_ADLS')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('LS_ADLS_properties_typeProperties_url')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_AzureKeyvault')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('LS_AzureKeyvault_properties_typeProperties_baseUrl')]"
 				}
 			},
 			"dependsOn": []
