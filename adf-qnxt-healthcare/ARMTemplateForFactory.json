@@ -7,6 +7,14 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "adf-qnxt-healthcare"
 		},
+		"LS_ADLS_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://qnxthealthcarestorage.dfs.core.windows.net/"
+		},
+		"LS_AzureKeyvault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://qnxt-keyvault.vault.azure.net/"
+		},
 		"LS_PostgreSql_properties_typeProperties_server": {
 			"type": "string",
 			"defaultValue": "ep-green-glade-ar1lxj0g-pooler.c-4.us-west-2.aws.neon.tech"
@@ -18,14 +26,6 @@
 		"LS_PostgreSql_properties_typeProperties_username": {
 			"type": "string",
 			"defaultValue": "neondb_owner"
-		},
-		"LS_ADLS_properties_typeProperties_url": {
-			"type": "string",
-			"defaultValue": "https://qnxthealthcarestorage.dfs.core.windows.net/"
-		},
-		"LS_AzureKeyvault_properties_typeProperties_baseUrl": {
-			"type": "string",
-			"defaultValue": "https://qnxt-keyvault.vault.azure.net/"
 		}
 	},
 	"variables": {
@@ -33,31 +33,132 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('factoryName'), '/LS_PostgreSql')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"name": "[concat(parameters('factoryName'), '/PL_Test')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"annotations": [],
-				"type": "PostgreSqlV2",
-				"typeProperties": {
-					"server": "[parameters('LS_PostgreSql_properties_typeProperties_server')]",
-					"port": 5432,
-					"database": "[parameters('LS_PostgreSql_properties_typeProperties_database')]",
-					"username": "[parameters('LS_PostgreSql_properties_typeProperties_username')]",
-					"password": {
-						"type": "AzureKeyVaultSecret",
-						"store": {
-							"referenceName": "LS_AzureKeyvault",
-							"type": "LinkedServiceReference"
+				"activities": [
+					{
+						"name": "Copy_data_from_postgres_to_adls",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
 						},
-						"secretName": "postgres-password"
-					},
-					"sslMode": 2,
-					"authenticationType": "Basic"
-				}
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "PostgreSqlV2Source",
+								"query": "select * from public.hospitals;",
+								"queryTimeout": "02:00:00"
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_PostgreSql",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_ADLS_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"ADLS_container": "landing",
+									"ADLS_folder": "test"
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LS_AzureKeyvault')]"
+				"[concat(variables('factoryId'), '/datasets/DS_PostgreSql')]",
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_Parquet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_ADLS_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"ADLS_container": {
+						"type": "String"
+					},
+					"ADLS_folder": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "@dataset().ADLS_folder",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().ADLS_container",
+							"type": "Expression"
+						}
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_ADLS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_PostgreSql')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_PostgreSql",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "PostgreSqlV2Table",
+				"schema": [],
+				"typeProperties": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_PostgreSql')]"
 			]
 		},
 		{
@@ -85,6 +186,34 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_PostgreSql')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "PostgreSqlV2",
+				"typeProperties": {
+					"server": "[parameters('LS_PostgreSql_properties_typeProperties_server')]",
+					"port": 5432,
+					"database": "[parameters('LS_PostgreSql_properties_typeProperties_database')]",
+					"username": "[parameters('LS_PostgreSql_properties_typeProperties_username')]",
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_AzureKeyvault",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "postgres-password"
+					},
+					"sslMode": 2,
+					"authenticationType": "Basic"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_AzureKeyvault')]"
+			]
 		}
 	]
 }

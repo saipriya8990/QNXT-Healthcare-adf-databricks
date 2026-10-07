@@ -7,6 +7,14 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "adf-qnxt-healthcare"
 		},
+		"LS_ADLS_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://qnxthealthcarestorage.dfs.core.windows.net/"
+		},
+		"LS_AzureKeyvault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://qnxt-keyvault.vault.azure.net/"
+		},
 		"LS_PostgreSql_properties_typeProperties_server": {
 			"type": "string",
 			"defaultValue": "ep-green-glade-ar1lxj0g-pooler.c-4.us-west-2.aws.neon.tech"
@@ -18,14 +26,6 @@
 		"LS_PostgreSql_properties_typeProperties_username": {
 			"type": "string",
 			"defaultValue": "neondb_owner"
-		},
-		"LS_ADLS_properties_typeProperties_url": {
-			"type": "string",
-			"defaultValue": "https://qnxthealthcarestorage.dfs.core.windows.net/"
-		},
-		"LS_AzureKeyvault_properties_typeProperties_baseUrl": {
-			"type": "string",
-			"defaultValue": "https://qnxt-keyvault.vault.azure.net/"
 		},
 		"containerUri": {
 			"type": "string",
