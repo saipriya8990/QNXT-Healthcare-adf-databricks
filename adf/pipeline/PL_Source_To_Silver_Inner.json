@@ -51,8 +51,6 @@
 			{
 				"name": "Source to Landing Ingestion",
 				"type": "Copy",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "Read Table Details",
@@ -78,14 +76,51 @@
 				"typeProperties": {
 					"source": {
 						"type": "PostgreSqlV2Source",
+						"query": {
+							"value": "select * from public.@{activity('Read Table Details').output.firstRow.source_table_name};",
+							"type": "Expression"
+						},
 						"queryTimeout": "02:00:00"
 					},
-					"enableStaging": false
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
 				},
 				"inputs": [
 					{
 						"referenceName": "DS_PostgreSql",
 						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ADLS_Parquet",
+						"type": "DatasetReference",
+						"parameters": {
+							"ADLS_container": {
+								"value": "@pipeline().parameters.ADLS_container",
+								"type": "Expression"
+							},
+							"ADLS_folder": {
+								"value": "@pipeline().parameters.ADLS_folder",
+								"type": "Expression"
+							}
+						}
 					}
 				]
 			}
@@ -94,6 +129,13 @@
 			"table_id": {
 				"type": "int",
 				"defaultValue": 1
+			},
+			"ADLS_container": {
+				"type": "string",
+				"defaultValue": "landing"
+			},
+			"ADLS_folder": {
+				"type": "string"
 			}
 		},
 		"variables": {
