@@ -1,0 +1,15 @@
+{
+	"name": "adf-qnxt-healthcare",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "f224b39b-c8a0-40f0-ba11-732b00c1d8d8",
+		"tenantId": "ba44904d-064e-4743-8cfc-459c4f7fe01a"
+	}
+}
