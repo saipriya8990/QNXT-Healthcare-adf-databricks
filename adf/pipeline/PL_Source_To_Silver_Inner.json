@@ -51,6 +51,8 @@
 			{
 				"name": "Source to Landing Ingestion",
 				"type": "Copy",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "Read Table Details",
