@@ -177,6 +177,40 @@
 								}
 							}
 						]
+					},
+					{
+						"name": "ADLS landing to Bronze",
+						"type": "DatabricksNotebook",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
+						"dependsOn": [
+							{
+								"activity": "Source to Landing Ingestion",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/qnxthealth-repo/Databricks/Databricks/Landing_To_Bronze",
+							"baseParameters": {
+								"Landing Timestamp": "2026-10-07_09:50:14",
+								"Source System": "neon_postgres",
+								"Table Name": "hospitals"
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_AzureDatabricks",
+							"type": "LinkedServiceReference"
+						}
 					}
 				],
 				"policy": {
@@ -202,7 +236,8 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLServer')]",
 				"[concat(variables('factoryId'), '/datasets/DS_PostgreSql')]",
-				"[concat(variables('factoryId'), '/datasets/DS_ADLS_Parquet')]"
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_Parquet')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_AzureDatabricks')]"
 			]
 		},
 		{
