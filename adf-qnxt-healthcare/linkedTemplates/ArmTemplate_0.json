@@ -381,15 +381,15 @@
 						"typeProperties": {
 							"notebookPath": "/qnxthealth-repo/Databricks/Databricks/Landing_To_Bronze",
 							"baseParameters": {
-								"Landing Timestamp": {
+								"landing_timestamp": {
 									"value": "@variables('start_time')",
 									"type": "Expression"
 								},
-								"Source System": {
+								"source_system": {
 									"value": "@activity('Read Table Details').output.firstRow.source_system",
 									"type": "Expression"
 								},
-								"Table Name": {
+								"table_name": {
 									"value": "@activity('Read Table Details').output.firstRow.bronze_table_name",
 									"type": "Expression"
 								}
@@ -436,6 +436,42 @@
 							"referenceName": "LS_AzureDatabricks",
 							"type": "LinkedServiceReference"
 						}
+					},
+					{
+						"name": "Update SUCCESS status in audit log",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "Bronze to silver",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "LS_SQLdb_QNXT",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": {
+										"value": "update ctrl.audit_log \nset status = 'SUCCESS', end_time = SYSUTCDATETIME(), records_Written = @{activity('Bronze to silver').output.runoutput}\nwhere adf_run_id = '@{pipeline().parameters.adf_run_id}' and table_id = @{pipeline().parameters.table_id}",
+										"type": "Expression"
+									}
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
 					}
 				],
 				"policy": {
@@ -445,6 +481,10 @@
 					"table_id": {
 						"type": "int",
 						"defaultValue": 1
+					},
+					"adf_run_id": {
+						"type": "string",
+						"defaultValue": "a1"
 					}
 				},
 				"variables": {
@@ -462,103 +502,8 @@
 				"[concat(variables('factoryId'), '/datasets/DS_SQLServer')]",
 				"[concat(variables('factoryId'), '/datasets/DS_PostgreSql')]",
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_Parquet')]",
-				"[concat(variables('factoryId'), '/linkedServices/LS_AzureDatabricks')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_Source_To_Silver_Main')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Read Source Tables List",
-						"description": "Read Source Tables List from Azure SQL Database",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 2,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "AzureSqlSource",
-								"sqlReaderQuery": {
-									"value": "select table_id from ctrl.table_config where is_active = 1 and source_system = '@{pipeline().parameters.source_system}'",
-									"type": "Expression"
-								},
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "DS_SQLServer",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "Ingest_All_Tables",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Read Source Tables List",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Read Source Tables List').output.value",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "Set variable1",
-									"type": "SetVariable",
-									"dependsOn": [],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "test",
-										"value": {
-											"value": "@string(item().table_id)",
-											"type": "Expression"
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"source_system": {
-						"type": "string",
-						"defaultValue": "neon_postgres"
-					}
-				},
-				"variables": {
-					"test": {
-						"type": "String"
-					}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/DS_SQLServer')]"
+				"[concat(variables('factoryId'), '/linkedServices/LS_AzureDatabricks')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_SQLdb_QNXT')]"
 			]
 		},
 		{
@@ -631,6 +576,186 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_PostgreSql')]",
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_Parquet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_Source_To_Silver_Main')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Read Source Tables List",
+						"description": "Read Source Tables List from Azure SQL Database",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "select table_id from ctrl.table_config where is_active = 1 and source_system = '@{pipeline().parameters.source_system}'",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLServer",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Ingest_All_Tables",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Read Source Tables List",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Read Source Tables List').output.value",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Ingest from Source to Silver",
+									"description": "Ingest data from Postgres source to silver databricks tables",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "Insert IN_PROGRESS status in audit log table",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_Source_To_Silver_Inner",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"table_id": {
+												"value": "@item().table_id",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "Insert IN_PROGRESS status in audit log table",
+									"type": "Script",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 2,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "LS_SQLdb_QNXT",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "Query",
+												"text": {
+													"value": "Insert into ctrl.audit_log (adf_run_id, table_id, stage, status, start_time)\nVALUES (@{pipeline().parameters.adf_run_id},@{item().table_id}, 'SOURCE_TO_SILVER', 'IN_PROGRESS', SYSUTCDATETIME())",
+													"type": "Expression"
+												}
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								},
+								{
+									"name": "Update FAILED status in audit log",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "Ingest from Source to Silver",
+											"dependencyConditions": [
+												"Failed"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 2,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "LS_SQLdb_QNXT",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "Query",
+												"text": {
+													"value": "update ctrl.audit_log \nset status = 'FAILED', end_time = SYSUTCDATETIME()\nwhere adf_run_id = '@{pipeline().parameters.adf_run_id}' and table_id = @{item().table_id}",
+													"type": "Expression"
+												}
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"source_system": {
+						"type": "string",
+						"defaultValue": "neon_postgres"
+					},
+					"adf_run_id": {
+						"type": "string",
+						"defaultValue": "a1"
+					}
+				},
+				"variables": {
+					"test": {
+						"type": "String"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_SQLServer')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_Source_To_Silver_Inner')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_SQLdb_QNXT')]"
 			]
 		}
 	]
