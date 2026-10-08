@@ -146,12 +146,15 @@
 				"typeProperties": {
 					"notebookPath": "/qnxthealth-repo/Databricks/Databricks/Landing_To_Bronze",
 					"baseParameters": {
-						"Landing Timestamp": "2026-10-08T07:14:45",
-						"Source System": {
+						"landing_timestamp": {
+							"value": "@variables('start_time')",
+							"type": "Expression"
+						},
+						"source_system": {
 							"value": "@activity('Read Table Details').output.firstRow.source_system",
 							"type": "Expression"
 						},
-						"Table Name": {
+						"table_name": {
 							"value": "@activity('Read Table Details').output.firstRow.bronze_table_name",
 							"type": "Expression"
 						}
