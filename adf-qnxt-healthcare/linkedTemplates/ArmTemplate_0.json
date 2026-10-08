@@ -202,15 +202,75 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/PL_Test')]",
+			"name": "[concat(parameters('factoryName'), '/PL_Source_To_Silver_Inner')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "Copy_data_from_postgres_to_adls",
-						"type": "Copy",
+						"name": "Read Table Details",
+						"type": "Lookup",
 						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "select * from ctrl.table_config where table_id = @{pipeline().parameters.table_id}",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLServer",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": true
+						}
+					},
+					{
+						"name": "Set start time",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "start_time",
+							"value": {
+								"value": "@formatDateTime(utcNow(),'yyyy-MM-dd_hh:mm:ss')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Source to Landing Ingestion",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Read Table Details",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Set start time",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
@@ -222,7 +282,10 @@
 						"typeProperties": {
 							"source": {
 								"type": "PostgreSqlV2Source",
-								"query": "select * from public.hospitals;",
+								"query": {
+									"value": "select * from public.@{activity('Read Table Details').output.firstRow.source_table_name};",
+									"type": "Expression"
+								},
 								"queryTimeout": "02:00:00"
 							},
 							"sink": {
@@ -256,8 +319,14 @@
 								"referenceName": "DS_ADLS_Parquet",
 								"type": "DatasetReference",
 								"parameters": {
-									"ADLS_container": "landing",
-									"ADLS_folder": "test"
+									"ADLS_container": {
+										"value": "@variables('adls_landing_directory')",
+										"type": "Expression"
+									},
+									"ADLS_folder": {
+										"value": "@concat(\n    activity('Read Table Details').output.firstRow.source_system,\n    '/',\n    activity('Read Table Details').output.firstRow.source_table_name,\n    '/',\n    variables('start_time')\n)",
+										"type": "Expression"
+									}
 								}
 							}
 						]
@@ -266,9 +335,25 @@
 				"policy": {
 					"elapsedTimeMetric": {}
 				},
+				"parameters": {
+					"table_id": {
+						"type": "int",
+						"defaultValue": 1
+					}
+				},
+				"variables": {
+					"start_time": {
+						"type": "String"
+					},
+					"adls_landing_directory": {
+						"type": "String",
+						"defaultValue": "landing"
+					}
+				},
 				"annotations": []
 			},
 			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_SQLServer')]",
 				"[concat(variables('factoryId'), '/datasets/DS_PostgreSql')]",
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_Parquet')]"
 			]
@@ -370,77 +455,15 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/PL_Source_To_Silver_Inner')]",
+			"name": "[concat(parameters('factoryName'), '/PL_Test')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "Read Table Details",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 2,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "AzureSqlSource",
-								"sqlReaderQuery": {
-									"value": "select * from ctrl.table_config where table_id = @{pipeline().parameters.table_id}",
-									"type": "Expression"
-								},
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "DS_SQLServer",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"firstRowOnly": true
-						}
-					},
-					{
-						"name": "Set start time",
-						"type": "SetVariable",
-						"dependsOn": [],
-						"policy": {
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "start_time",
-							"value": {
-								"value": "@formatDateTime(utcNow(),'yyyy-MM-dd_hh:mm:ss')",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "Source to Landing Ingestion",
+						"name": "Copy_data_from_postgres_to_adls",
 						"type": "Copy",
-						"state": "Inactive",
-						"onInactiveMarkAs": "Succeeded",
-						"dependsOn": [
-							{
-								"activity": "Read Table Details",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							},
-							{
-								"activity": "Set start time",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
+						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
@@ -452,9 +475,27 @@
 						"typeProperties": {
 							"source": {
 								"type": "PostgreSqlV2Source",
+								"query": "select * from public.hospitals;",
 								"queryTimeout": "02:00:00"
 							},
-							"enableStaging": false
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
 						},
 						"inputs": [
 							{
@@ -462,28 +503,27 @@
 								"type": "DatasetReference",
 								"parameters": {}
 							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_ADLS_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"ADLS_container": "landing",
+									"ADLS_folder": "test"
+								}
+							}
 						]
 					}
 				],
 				"policy": {
 					"elapsedTimeMetric": {}
 				},
-				"parameters": {
-					"table_id": {
-						"type": "int",
-						"defaultValue": 1
-					}
-				},
-				"variables": {
-					"start_time": {
-						"type": "String"
-					}
-				},
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/DS_SQLServer')]",
-				"[concat(variables('factoryId'), '/datasets/DS_PostgreSql')]"
+				"[concat(variables('factoryId'), '/datasets/DS_PostgreSql')]",
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_Parquet')]"
 			]
 		}
 	]
