@@ -163,7 +163,7 @@
 							],
 							"userProperties": [],
 							"typeProperties": {
-								"message": "Inner Pipeline Failed",
+								"message": "Activities inside foreach loop failed in PL_Source_To_Silver_Main pipeline",
 								"errorCode": "500"
 							}
 						}
