@@ -1,4 +1,4 @@
-# CareSync Health Network — Metadata-Driven Data Platform on Azure &amp; Databricks
+# QNXT Health Network — Metadata-Driven Data Platform on Azure &amp; Databricks
 
 An end-to-end, metadata-driven data engineering project for a multi-hospital
 healthcare network. It ingests relational data from an internal hospital
@@ -10,7 +10,7 @@ every run automatically audited and reported by email.
 
 ## Architecture
 
-![CareSync end-to-end architecture](assets/architecture-overview.png)
+![QNXT end-to-end architecture](assets/architecture-overview.png)
 
 Data flows from the source systems on the left through ingestion,
 transformation, and out to consumption, with orchestration, governance, and
