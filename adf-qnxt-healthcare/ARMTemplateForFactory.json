@@ -530,7 +530,7 @@
 					},
 					"adf_run_id": {
 						"type": "string",
-						"defaultValue": "a1"
+						"defaultValue": "a5"
 					}
 				},
 				"variables": {
@@ -640,7 +640,7 @@
 												"type": "Expression"
 											},
 											"adf_run_id": {
-												"value": "@item().adf_run_id",
+												"value": "@pipeline().parameters.adf_run_id",
 												"type": "Expression"
 											}
 										}
