@@ -275,7 +275,7 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "Read Source Tables List",
+						"name": "Read Source Tables List for Gold tables",
 						"description": "Read Source Tables List from Azure SQL Database",
 						"type": "Lookup",
 						"dependsOn": [],
@@ -310,7 +310,7 @@
 						"type": "ForEach",
 						"dependsOn": [
 							{
-								"activity": "Read Source Tables List",
+								"activity": "Read Source Tables List for Gold tables",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -319,7 +319,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@activity('Read Source Tables List').output.value",
+								"value": "@activity('Read Source Tables List for Gold tables').output.value",
 								"type": "Expression"
 							},
 							"isSequential": false,
@@ -412,24 +412,6 @@
 										"notebookPath": {
 											"value": "/qnxthealth-repo/Databricks/Databricks/Gold/NB_@{item().gold_table_name}",
 											"type": "Expression"
-										},
-										"baseParameters": {
-											"landing_timestamp": {
-												"value": "@variables('start_time')",
-												"type": "Expression"
-											},
-											"source_system": {
-												"value": "@activity('Read Table Details').output.firstRow.source_system",
-												"type": "Expression"
-											},
-											"table_name": {
-												"value": "@activity('Read Table Details').output.firstRow.bronze_table_name",
-												"type": "Expression"
-											},
-											"source_file_format": {
-												"value": "@coalesce(activity('Read Table Details').output.firstRow.source_file_format,'')",
-												"type": "Expression"
-											}
 										}
 									},
 									"linkedServiceName": {
@@ -484,11 +466,6 @@
 					"adf_run_id": {
 						"type": "string",
 						"defaultValue": "a8"
-					}
-				},
-				"variables": {
-					"test": {
-						"type": "String"
 					}
 				},
 				"annotations": []
@@ -1008,78 +985,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/PL_Test')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Copy_data_from_postgres_to_adls",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "PostgreSqlV2Source",
-								"query": "select * from public.hospitals;",
-								"queryTimeout": "02:00:00"
-							},
-							"sink": {
-								"type": "ParquetSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "ParquetWriteSettings"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "DS_PostgreSql",
-								"type": "DatasetReference",
-								"parameters": {}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "DS_ADLS_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"ADLS_container": "landing",
-									"ADLS_folder": "test"
-								}
-							}
-						]
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/DS_PostgreSql')]",
-				"[concat(variables('factoryId'), '/datasets/DS_ADLS_Parquet')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/PL_Source_To_Silver_Main')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1262,6 +1167,104 @@
 				"[concat(variables('factoryId'), '/datasets/DS_SQLServer')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_Source_To_Silver_Inner')]",
 				"[concat(variables('factoryId'), '/linkedServices/LS_SQLdb_QNXT')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_Master_QNXTHealth')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Source to Silver Postgres",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_Source_To_Silver_Main",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"source_system": "neon_postgres",
+								"adf_run_id": {
+									"value": "@pipeline().RunId",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "Source to Silver ADLS csv",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_Source_To_Silver_Main",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"source_system": "adls_csv",
+								"adf_run_id": {
+									"value": "@pipeline().RunId",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "Silver to Gold",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Source to Silver Postgres",
+								"dependencyConditions": [
+									"Completed"
+								]
+							},
+							{
+								"activity": "Source to Silver ADLS csv",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_Silver_To_Gold",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"adf_run_id": {
+									"value": "@pipeline().RunId",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_Source_To_Silver_Main')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_Silver_To_Gold')]"
 			]
 		}
 	]
