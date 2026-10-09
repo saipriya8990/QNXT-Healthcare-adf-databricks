@@ -81,6 +81,10 @@
 						"table_name": {
 							"value": "@activity('Read Table Details').output.firstRow.bronze_table_name",
 							"type": "Expression"
+						},
+						"source_file_format": {
+							"value": "@coalesce(activity('Read Table Details').output.firstRow.source_file_format,'')",
+							"type": "Expression"
 						}
 					}
 				},
@@ -409,10 +413,21 @@
 											"type": "BinarySource",
 											"storeSettings": {
 												"type": "AzureBlobFSReadSettings",
-												"recursive": true
+												"recursive": false,
+												"modifiedDatetimeStart": {
+													"value": "@variables('watermark_value')",
+													"type": "Expression"
+												},
+												"deleteFilesAfterCompletion": false
 											},
 											"formatSettings": {
 												"type": "BinaryReadSettings"
+											}
+										},
+										"sink": {
+											"type": "BinarySink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
 											}
 										},
 										"enableStaging": false
@@ -420,7 +435,27 @@
 									"inputs": [
 										{
 											"referenceName": "DS_ADLS_CSV_Binary",
-											"type": "DatasetReference"
+											"type": "DatasetReference",
+											"parameters": {
+												"folder": {
+													"value": "@activity('Read Table Details').output.firstRow.source_path",
+													"type": "Expression"
+												},
+												"container": "source"
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_ADLS_CSV_Binary",
+											"type": "DatasetReference",
+											"parameters": {
+												"folder": {
+													"value": "@concat(\n    activity('Read Table Details').output.firstRow.source_system,\n    '/',\n    activity('Read Table Details').output.firstRow.source_table_name,\n    '/',\n    variables('start_time')\n)",
+													"type": "Expression"
+												},
+												"container": "landing"
+											}
 										}
 									]
 								}
