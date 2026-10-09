@@ -83,7 +83,14 @@
 						{
 							"name": "Update FAILED status in audit log",
 							"type": "Script",
-							"dependsOn": [],
+							"dependsOn": [
+								{
+									"activity": "Silver to Gold",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
 							"policy": {
 								"timeout": "0.12:00:00",
 								"retry": 1,
@@ -102,6 +109,90 @@
 										"type": "Query",
 										"text": {
 											"value": "update ctrl.audit_log \nset status = 'FAILED', end_time = SYSUTCDATETIME()\nwhere adf_run_id = '@{pipeline().parameters.adf_run_id}' and table_id = @{item().table_id}",
+											"type": "Expression"
+										}
+									}
+								],
+								"scriptBlockExecutionTimeout": "02:00:00"
+							}
+						},
+						{
+							"name": "Silver to Gold",
+							"type": "DatabricksNotebook",
+							"dependsOn": [
+								{
+									"activity": "Insert IN_PROGRESS status in audit log table",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"notebookPath": {
+									"value": "/qnxthealth-repo/Databricks/Databricks/Gold/NB_@{item().gold_table_name}",
+									"type": "Expression"
+								},
+								"baseParameters": {
+									"landing_timestamp": {
+										"value": "@variables('start_time')",
+										"type": "Expression"
+									},
+									"source_system": {
+										"value": "@activity('Read Table Details').output.firstRow.source_system",
+										"type": "Expression"
+									},
+									"table_name": {
+										"value": "@activity('Read Table Details').output.firstRow.bronze_table_name",
+										"type": "Expression"
+									},
+									"source_file_format": {
+										"value": "@coalesce(activity('Read Table Details').output.firstRow.source_file_format,'')",
+										"type": "Expression"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_AzureDatabricks",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "Update SUCCESS status in audit log",
+							"type": "Script",
+							"dependsOn": [
+								{
+									"activity": "Silver to Gold",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 2,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "LS_SQLdb_QNXT",
+								"type": "LinkedServiceReference"
+							},
+							"typeProperties": {
+								"scripts": [
+									{
+										"type": "Query",
+										"text": {
+											"value": "update ctrl.audit_log \nset status = 'SUCCESS', end_time = SYSUTCDATETIME(), records_Written = @{activity('Silver to Gold').output.runOutput}\nwhere adf_run_id = '@{pipeline().parameters.adf_run_id}' and table_id = @{item().table_id}",
 											"type": "Expression"
 										}
 									}
