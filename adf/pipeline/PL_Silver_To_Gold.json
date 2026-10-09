@@ -19,7 +19,7 @@
 					"source": {
 						"type": "AzureSqlSource",
 						"sqlReaderQuery": {
-							"value": "select table_id from ctrl.table_config where is_active = 1 and source_system = '@{pipeline().parameters.source_system}'",
+							"value": "select table_id, gold_table_name from ctrl.table_config where is_active=1 and stage = 'SILVER_TO_GOLD'",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
@@ -35,6 +35,8 @@
 			{
 				"name": "Ingest_All_Tables",
 				"type": "ForEach",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "Read Source Tables List",
@@ -51,40 +53,6 @@
 					},
 					"isSequential": false,
 					"activities": [
-						{
-							"name": "Ingest from Source to Silver",
-							"description": "Ingest data from Postgres source to silver databricks tables",
-							"type": "ExecutePipeline",
-							"dependsOn": [
-								{
-									"activity": "Insert IN_PROGRESS status in audit log table",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"pipeline": {
-									"referenceName": "PL_Source_To_Silver_Inner",
-									"type": "PipelineReference"
-								},
-								"waitOnCompletion": true,
-								"parameters": {
-									"table_id": {
-										"value": "@item().table_id",
-										"type": "Expression"
-									},
-									"adf_run_id": {
-										"value": "@pipeline().parameters.adf_run_id",
-										"type": "Expression"
-									}
-								}
-							}
-						},
 						{
 							"name": "Insert IN_PROGRESS status in audit log table",
 							"type": "Script",
@@ -106,7 +74,7 @@
 									{
 										"type": "Query",
 										"text": {
-											"value": "Insert into ctrl.audit_log (adf_run_id, table_id, stage, status, start_time)\nVALUES ('@{pipeline().parameters.adf_run_id}',@{item().table_id}, 'SOURCE_TO_SILVER', 'IN_PROGRESS', SYSUTCDATETIME())",
+											"value": "Insert into ctrl.audit_log (adf_run_id, table_id, stage, status, start_time)\nVALUES ('@{pipeline().parameters.adf_run_id}',@{item().table_id}, 'SILVER_TO_GOLD', 'IN_PROGRESS', SYSUTCDATETIME())",
 											"type": "Expression"
 										}
 									}
@@ -117,14 +85,7 @@
 						{
 							"name": "Update FAILED status in audit log",
 							"type": "Script",
-							"dependsOn": [
-								{
-									"activity": "Ingest from Source to Silver",
-									"dependencyConditions": [
-										"Failed"
-									]
-								}
-							],
+							"dependsOn": [],
 							"policy": {
 								"timeout": "0.12:00:00",
 								"retry": 1,
@@ -155,13 +116,9 @@
 			}
 		],
 		"parameters": {
-			"source_system": {
-				"type": "string",
-				"defaultValue": "adls_csv"
-			},
 			"adf_run_id": {
 				"type": "string",
-				"defaultValue": "a3"
+				"defaultValue": "a8"
 			}
 		},
 		"variables": {
