@@ -210,11 +210,6 @@
 				"defaultValue": "a8"
 			}
 		},
-		"variables": {
-			"test": {
-				"type": "String"
-			}
-		},
 		"annotations": []
 	}
 }
