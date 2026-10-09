@@ -181,6 +181,23 @@
 								],
 								"scriptBlockExecutionTimeout": "02:00:00"
 							}
+						},
+						{
+							"name": "Update pipeline as FAILED",
+							"type": "Fail",
+							"dependsOn": [
+								{
+									"activity": "Silver to Gold",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"message": "Activities inside foreach loop failed in PL_Silver_To_Gold pipeline",
+								"errorCode": "500"
+							}
 						}
 					]
 				}
