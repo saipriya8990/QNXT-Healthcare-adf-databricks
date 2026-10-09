@@ -389,7 +389,42 @@
 							]
 						},
 						{
-							"value": "adls_csv"
+							"value": "adls_csv",
+							"activities": [
+								{
+									"name": "Ingest csv from source to landing",
+									"description": "From ADLS source folder to ADLS landing folder",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "BinarySource",
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true
+											},
+											"formatSettings": {
+												"type": "BinaryReadSettings"
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_ADLS_CSV_Binary",
+											"type": "DatasetReference"
+										}
+									]
+								}
+							]
 						}
 					]
 				}
