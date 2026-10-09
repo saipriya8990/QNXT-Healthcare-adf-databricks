@@ -1,0 +1,1656 @@
+{
+  "datasets": [
+    {
+      "name": "lab_trends",
+      "displayName": "Lab Test Trends",
+      "config": {
+        "version": "1.1",
+        "source": "adb_qnxthealth.gold.lab_test_trends",
+        "dimensions": [
+          {
+            "name": "test_name",
+            "expr": "test_name",
+            "displayName": "Test Name"
+          },
+          {
+            "name": "year",
+            "expr": "year"
+          },
+          {
+            "name": "month",
+            "expr": "month"
+          },
+          {
+            "name": "month_name",
+            "expr": "month_name"
+          },
+          {
+            "name": "quarter_name",
+            "expr": "quarter_name"
+          },
+          {
+            "name": "abnormal_rate_pct",
+            "expr": "abnormal_rate_pct"
+          },
+          {
+            "name": "critical_rate_pct",
+            "expr": "critical_rate_pct"
+          },
+          {
+            "name": "abnormal_rate_change_pct",
+            "expr": "abnormal_rate_change_pct"
+          },
+          {
+            "name": "year_month",
+            "expr": "MAKE_DATE(year, month, 1)",
+            "displayName": "Month",
+            "format": {
+              "type": "date",
+              "dateFormat": "locale_short_month"
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Total Tests",
+            "expr": "SUM(total_tests)"
+          },
+          {
+            "name": "Abnormal Tests",
+            "expr": "SUM(abnormal_test_count)"
+          },
+          {
+            "name": "Critical Tests",
+            "expr": "SUM(critical_test_count)"
+          },
+          {
+            "name": "Avg Abnormal Rate Pct",
+            "expr": "AVG(abnormal_rate_pct)",
+            "displayName": "Avg Abnormal Rate %",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 2.0
+              }
+            }
+          },
+          {
+            "name": "Avg Critical Rate Pct",
+            "expr": "AVG(critical_rate_pct)",
+            "displayName": "Avg Critical Rate %",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 2.0
+              }
+            }
+          },
+          {
+            "name": "Avg Rate Change Pct",
+            "expr": "AVG(abnormal_rate_change_pct)",
+            "displayName": "Avg Abnormal Rate Change (pp)",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 2.0
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "patient_360",
+      "displayName": "Patient 360",
+      "config": {
+        "version": "1.1",
+        "source": "adb_qnxthealth.gold.patient_360",
+        "dimensions": [
+          {
+            "name": "patient_id",
+            "expr": "patient_id"
+          },
+          {
+            "name": "first_name",
+            "expr": "first_name"
+          },
+          {
+            "name": "last_name",
+            "expr": "last_name"
+          },
+          {
+            "name": "date_of_birth",
+            "expr": "date_of_birth"
+          },
+          {
+            "name": "age",
+            "expr": "age"
+          },
+          {
+            "name": "age_group",
+            "expr": "CASE\n  WHEN age BETWEEN 0 AND 18 THEN '0-18'\n  WHEN age BETWEEN 19 AND 35 THEN '19-35'\n  WHEN age BETWEEN 36 AND 50 THEN '36-50'\n  WHEN age BETWEEN 51 AND 65 THEN '51-65'\n  ELSE '66+'\nEND",
+            "displayName": "Age Group"
+          },
+          {
+            "name": "gender",
+            "expr": "gender"
+          },
+          {
+            "name": "city",
+            "expr": "city"
+          },
+          {
+            "name": "state",
+            "expr": "state"
+          },
+          {
+            "name": "hospital_id",
+            "expr": "hospital_id"
+          },
+          {
+            "name": "hospital_name",
+            "expr": "hospital_name"
+          },
+          {
+            "name": "insurance_provider_id",
+            "expr": "insurance_provider_id"
+          },
+          {
+            "name": "insurance_provider_name",
+            "expr": "insurance_provider_name"
+          },
+          {
+            "name": "total_tests",
+            "expr": "total_tests"
+          },
+          {
+            "name": "abnormal_test_count",
+            "expr": "abnormal_test_count"
+          },
+          {
+            "name": "critical_test_count",
+            "expr": "critical_test_count"
+          },
+          {
+            "name": "last_test_date",
+            "expr": "last_test_date"
+          },
+          {
+            "name": "has_tests",
+            "expr": "CASE WHEN total_tests > 0 THEN 'Has Tests' ELSE 'No Tests' END",
+            "displayName": "Test Status"
+          }
+        ],
+        "measures": [
+          {
+            "name": "Patient Count",
+            "expr": "COUNT(1)"
+          },
+          {
+            "name": "Total Lab Tests",
+            "expr": "SUM(total_tests)"
+          },
+          {
+            "name": "Total Abnormal Tests",
+            "expr": "SUM(abnormal_test_count)"
+          },
+          {
+            "name": "Total Critical Tests",
+            "expr": "SUM(critical_test_count)"
+          },
+          {
+            "name": "Abnormal Rate Pct",
+            "expr": "MEASURE(`Total Abnormal Tests`) * 100.0 / MEASURE(`Total Lab Tests`)",
+            "displayName": "Abnormal Rate %",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 2.0
+              }
+            }
+          },
+          {
+            "name": "Hospital Count",
+            "expr": "COUNT(DISTINCT hospital_name)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "hospital_daily",
+      "displayName": "Hospital Daily Summary",
+      "config": {
+        "version": "1.1",
+        "source": "adb_qnxthealth.gold.hospital_daily_summary",
+        "dimensions": [
+          {
+            "name": "hospital_id",
+            "expr": "hospital_id"
+          },
+          {
+            "name": "hospital_name",
+            "expr": "hospital_name"
+          },
+          {
+            "name": "summary_date",
+            "expr": "summary_date",
+            "displayName": "Date"
+          },
+          {
+            "name": "day_name",
+            "expr": "day_name"
+          },
+          {
+            "name": "day_type",
+            "expr": "CASE WHEN is_weekend = true THEN 'Weekend' ELSE 'Weekday' END",
+            "displayName": "Day Type"
+          }
+        ],
+        "measures": [
+          {
+            "name": "Total Tests",
+            "expr": "SUM(total_tests)"
+          },
+          {
+            "name": "Unique Patients Tested",
+            "expr": "SUM(unique_patients_tested)"
+          },
+          {
+            "name": "Active Doctors",
+            "expr": "SUM(active_doctor_count)"
+          },
+          {
+            "name": "Abnormal Tests",
+            "expr": "SUM(abnormal_test_count)"
+          },
+          {
+            "name": "Critical Tests",
+            "expr": "SUM(critical_test_count)"
+          },
+          {
+            "name": "Avg Abnormal Rate Pct",
+            "expr": "AVG(abnormal_rate_pct)",
+            "displayName": "Avg Abnormal Rate %",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 2.0
+              }
+            }
+          },
+          {
+            "name": "Avg Daily Tests",
+            "expr": "AVG(total_tests)",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            }
+          },
+          {
+            "name": "Day Count",
+            "expr": "COUNT(1)"
+          },
+          {
+            "name": "Avg Unique Patients Per Day",
+            "expr": "AVG(unique_patients_tested)",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "pages": [
+    {
+      "name": "8e131089",
+      "displayName": "Executive Overview",
+      "layout": [
+        {
+          "widget": {
+            "name": "header_exec",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Executive Overview"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_patients",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "patient_360",
+                  "fields": [
+                    {
+                      "name": "measure(Patient Count)",
+                      "expression": "MEASURE(`Patient Count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Total Patients",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(Patient Count)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_hospitals",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "patient_360",
+                  "fields": [
+                    {
+                      "name": "measure(Hospital Count)",
+                      "expression": "MEASURE(`Hospital Count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Total Hospitals",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(Hospital Count)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_tests",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "patient_360",
+                  "fields": [
+                    {
+                      "name": "measure(Total Lab Tests)",
+                      "expression": "MEASURE(`Total Lab Tests`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Total Lab Tests",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(Total Lab Tests)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_abnormal",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "patient_360",
+                  "fields": [
+                    {
+                      "name": "measure(Abnormal Rate Pct)",
+                      "expression": "MEASURE(`Abnormal Rate Pct`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Overall Abnormal Rate %",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(Abnormal Rate Pct)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 1,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "top_hospitals",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "patient_360",
+                  "fields": [
+                    {
+                      "name": "hospital_name",
+                      "expression": "`hospital_name`"
+                    },
+                    {
+                      "name": "measure(Total Lab Tests)",
+                      "expression": "MEASURE(`Total Lab Tests`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Top 10 Hospitals by Total Tests",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "hospital_name",
+                  "displayName": "hospital_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Total Lab Tests)",
+                  "displayName": "Total Lab Tests",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "hospital_name",
+                  "displayName": "hospital_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "gender_dist",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "patient_360",
+                  "fields": [
+                    {
+                      "name": "measure(Patient Count)",
+                      "expression": "MEASURE(`Patient Count`)"
+                    },
+                    {
+                      "name": "gender",
+                      "expression": "`gender`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Patient Distribution by Gender",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "measure(Patient Count)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Patient Count"
+                },
+                "color": {
+                  "fieldName": "gender",
+                  "displayName": "gender",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 3,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "state_dist",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "patient_360",
+                  "fields": [
+                    {
+                      "name": "state",
+                      "expression": "`state`"
+                    },
+                    {
+                      "name": "measure(Patient Count)",
+                      "expression": "MEASURE(`Patient Count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Patient Count by State (Top 10)",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "state",
+                  "displayName": "state",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Patient Count)",
+                  "displayName": "Patient Count",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "state",
+                  "displayName": "state",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 12,
+            "height": 5
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "patient_insights",
+      "displayName": "Patient Insights",
+      "layout": [
+        {
+          "widget": {
+            "name": "header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Patient Insights"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "age_dist",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "patient_360",
+                  "fields": [
+                    {
+                      "name": "age_group",
+                      "expression": "`age_group`"
+                    },
+                    {
+                      "name": "measure(Patient Count)",
+                      "expression": "MEASURE(`Patient Count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Age Distribution",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "age_group",
+                  "displayName": "age_group",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Patient Count)",
+                  "displayName": "Patient Count",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "age_group",
+                  "displayName": "age_group",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "insurance_dist",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "patient_360",
+                  "fields": [
+                    {
+                      "name": "insurance_provider_name",
+                      "expression": "`insurance_provider_name`"
+                    },
+                    {
+                      "name": "measure(Patient Count)",
+                      "expression": "MEASURE(`Patient Count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Patients by Insurance Provider",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "insurance_provider_name",
+                  "displayName": "insurance_provider_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Patient Count)",
+                  "displayName": "Patient Count",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "insurance_provider_name",
+                  "displayName": "insurance_provider_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 1,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "test_status",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "patient_360",
+                  "fields": [
+                    {
+                      "name": "measure(Patient Count)",
+                      "expression": "MEASURE(`Patient Count`)"
+                    },
+                    {
+                      "name": "has_tests",
+                      "expression": "`has_tests`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Patients With Tests vs Without",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "measure(Patient Count)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Patient Count"
+                },
+                "color": {
+                  "fieldName": "has_tests",
+                  "displayName": "has_tests",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 4,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "top_abnormal",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "patient_360",
+                  "fields": [
+                    {
+                      "name": "first_name",
+                      "expression": "`first_name`"
+                    },
+                    {
+                      "name": "last_name",
+                      "expression": "`last_name`"
+                    },
+                    {
+                      "name": "hospital_name",
+                      "expression": "`hospital_name`"
+                    },
+                    {
+                      "name": "total_tests",
+                      "expression": "`total_tests`"
+                    },
+                    {
+                      "name": "abnormal_test_count",
+                      "expression": "`abnormal_test_count`"
+                    },
+                    {
+                      "name": "critical_test_count",
+                      "expression": "`critical_test_count`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Top 20 Patients by Abnormal Tests",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "first_name"
+                  },
+                  {
+                    "fieldName": "last_name"
+                  },
+                  {
+                    "fieldName": "hospital_name"
+                  },
+                  {
+                    "fieldName": "total_tests"
+                  },
+                  {
+                    "fieldName": "abnormal_test_count"
+                  },
+                  {
+                    "fieldName": "critical_test_count"
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 6,
+            "width": 8,
+            "height": 5
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "hospital_performance",
+      "displayName": "Hospital Performance",
+      "layout": [
+        {
+          "widget": {
+            "name": "header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Hospital Performance"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_avg_patients",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "hospital_daily",
+                  "fields": [
+                    {
+                      "name": "measure(Avg Unique Patients Per Day)",
+                      "expression": "MEASURE(`Avg Unique Patients Per Day`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Avg Unique Patients Per Day"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(Avg Unique Patients Per Day)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "tests_over_time",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "hospital_daily",
+                  "fields": [
+                    {
+                      "name": "monthly(summary_date)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `summary_date`)"
+                    },
+                    {
+                      "name": "measure(Total Tests)",
+                      "expression": "MEASURE(`Total Tests`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Total Tests Over Time"
+              },
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(summary_date)",
+                  "displayName": "Month",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Total Tests)",
+                  "displayName": "Total Tests",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "avg_daily_hosp",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "hospital_daily",
+                  "fields": [
+                    {
+                      "name": "hospital_name",
+                      "expression": "`hospital_name`"
+                    },
+                    {
+                      "name": "measure(Avg Daily Tests)",
+                      "expression": "MEASURE(`Avg Daily Tests`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Average Daily Tests per Hospital (Top 10)"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "hospital_name",
+                  "displayName": "hospital_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Avg Daily Tests)",
+                  "displayName": "Avg Daily Tests",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "hospital_name",
+                  "displayName": "hospital_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 3,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "abnormal_by_hosp",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "hospital_daily",
+                  "fields": [
+                    {
+                      "name": "hospital_name",
+                      "expression": "`hospital_name`"
+                    },
+                    {
+                      "name": "measure(Avg Abnormal Rate Pct)",
+                      "expression": "MEASURE(`Avg Abnormal Rate Pct`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Abnormal Rate by Hospital"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "hospital_name",
+                  "displayName": "hospital_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Avg Abnormal Rate Pct)",
+                  "displayName": "Avg Abnormal Rate Pct",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "hospital_name",
+                  "displayName": "hospital_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "wknd_vs_wkday",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "hospital_daily",
+                  "fields": [
+                    {
+                      "name": "day_type",
+                      "expression": "`day_type`"
+                    },
+                    {
+                      "name": "monthly(summary_date)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `summary_date`)"
+                    },
+                    {
+                      "name": "measure(Total Tests)",
+                      "expression": "MEASURE(`Total Tests`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Weekend vs Weekday Test Volume"
+              },
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(summary_date)",
+                  "displayName": "Month",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Total Tests)",
+                  "displayName": "Total Tests",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "day_type",
+                  "displayName": "day_type",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 8,
+            "width": 6,
+            "height": 5
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "lab_test_trends",
+      "displayName": "Lab Test Trends",
+      "layout": [
+        {
+          "widget": {
+            "name": "header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Lab Test Trends"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "abnormal_over_time",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "lab_trends",
+                  "fields": [
+                    {
+                      "name": "test_name",
+                      "expression": "`test_name`"
+                    },
+                    {
+                      "name": "year_month",
+                      "expression": "`year_month`"
+                    },
+                    {
+                      "name": "measure(Avg Abnormal Rate Pct)",
+                      "expression": "MEASURE(`Avg Abnormal Rate Pct`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Abnormal Rate Over Time by Test"
+              },
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "year_month",
+                  "displayName": "year_month",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Avg Abnormal Rate Pct)",
+                  "displayName": "Avg Abnormal Rate Pct",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "test_name",
+                  "displayName": "test_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "tests_by_type",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "lab_trends",
+                  "fields": [
+                    {
+                      "name": "test_name",
+                      "expression": "`test_name`"
+                    },
+                    {
+                      "name": "measure(Total Tests)",
+                      "expression": "MEASURE(`Total Tests`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Total Tests by Test Type"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "test_name",
+                  "displayName": "test_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Total Tests)",
+                  "displayName": "Total Tests",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "test_name",
+                  "displayName": "test_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 1,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "mom_change",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "lab_trends",
+                  "fields": [
+                    {
+                      "name": "test_name",
+                      "expression": "`test_name`"
+                    },
+                    {
+                      "name": "year_month",
+                      "expression": "`year_month`"
+                    },
+                    {
+                      "name": "measure(Avg Rate Change Pct)",
+                      "expression": "MEASURE(`Avg Rate Change Pct`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Month-over-Month Abnormal Rate Change by Test"
+              },
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "year_month",
+                  "displayName": "year_month",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Avg Rate Change Pct)",
+                  "displayName": "Avg Rate Change Pct",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "test_name",
+                  "displayName": "test_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 12,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "detail_table",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "lab_trends",
+                  "fields": [
+                    {
+                      "name": "test_name",
+                      "expression": "`test_name`"
+                    },
+                    {
+                      "name": "year",
+                      "expression": "`year`"
+                    },
+                    {
+                      "name": "month",
+                      "expression": "`month`"
+                    },
+                    {
+                      "name": "total_tests",
+                      "expression": "`total_tests`"
+                    },
+                    {
+                      "name": "abnormal_rate_pct",
+                      "expression": "`abnormal_rate_pct`"
+                    },
+                    {
+                      "name": "critical_rate_pct",
+                      "expression": "`critical_rate_pct`"
+                    },
+                    {
+                      "name": "abnormal_rate_change_pct",
+                      "expression": "`abnormal_rate_change_pct`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Lab Test Trends Detail"
+              },
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "test_name"
+                  },
+                  {
+                    "fieldName": "year"
+                  },
+                  {
+                    "fieldName": "month"
+                  },
+                  {
+                    "fieldName": "total_tests"
+                  },
+                  {
+                    "fieldName": "abnormal_rate_pct"
+                  },
+                  {
+                    "fieldName": "critical_rate_pct"
+                  },
+                  {
+                    "fieldName": "abnormal_rate_change_pct"
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 11,
+            "width": 12,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  }
+}
