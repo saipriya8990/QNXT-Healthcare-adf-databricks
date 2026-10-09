@@ -77,6 +77,10 @@
 									"table_id": {
 										"value": "@item().table_id",
 										"type": "Expression"
+									},
+									"adf_run_id": {
+										"value": "@item().adf_run_id",
+										"type": "Expression"
 									}
 								}
 							}
