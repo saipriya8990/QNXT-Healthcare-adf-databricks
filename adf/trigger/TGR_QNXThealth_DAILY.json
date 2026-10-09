@@ -1,0 +1,26 @@
+{
+	"name": "TGR_QNXThealth_DAILY",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2026-10-09T21:41:00",
+				"endTime": "2026-10-11T21:41:00",
+				"timeZone": "Pacific Standard Time",
+				"schedule": {
+					"minutes": [
+						45
+					],
+					"hours": [
+						14
+					]
+				}
+			}
+		}
+	}
+}
