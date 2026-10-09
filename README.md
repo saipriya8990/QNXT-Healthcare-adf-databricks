@@ -66,15 +66,4 @@ Azure Data Factory · Azure Data Lake Storage Gen2 · Azure SQL Database ·
 Azure Key Vault · Azure Logic Apps · Databricks · Delta Lake · Unity Catalog ·
 PySpark · PostgreSQL · GitHub
 
-## Author
 
-<p align="center">
-  <img src="assets/narender-photo.png" width="110" alt="Narender Kumar"><br>
-  <strong>Narender Kumar</strong>
-</p>
-
-<p align="center">
-  <a href="https://www.youtube.com/@DataBeli"><img src="assets/youtube-icon.png" width="18" valign="middle"> YouTube</a>
-  &nbsp;|&nbsp;
-  <a href="https://www.linkedin.com/in/narender-kumar91/"><img src="assets/linkedin-icon.png" width="18" valign="middle"> LinkedIn</a>
-</p>
