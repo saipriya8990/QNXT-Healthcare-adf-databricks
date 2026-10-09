@@ -8,7 +8,7 @@
 			},
 			"env": {
 				"type": "string",
-				"value": "dev"
+				"value": "DEV"
 			},
 			"logic_apps_URL": {
 				"type": "string",
