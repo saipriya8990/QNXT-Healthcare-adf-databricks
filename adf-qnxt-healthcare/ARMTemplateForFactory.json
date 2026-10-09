@@ -106,13 +106,7 @@
 						"type": "Copy",
 						"dependsOn": [
 							{
-								"activity": "Read Table Details",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							},
-							{
-								"activity": "Set start time",
+								"activity": "Check load type for a table",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -130,7 +124,7 @@
 							"source": {
 								"type": "PostgreSqlV2Source",
 								"query": {
-									"value": "select * from public.@{activity('Read Table Details').output.firstRow.source_table_name};",
+									"value": "select * from public.@{activity('Read Table Details').output.firstRow.source_table_name}\n@{\n\tif(equals(activity('Read Table Details').output.firstRow.load_type, 'FULL')\n        , ''\n        , concat(' where ',activity('Read Table Details').output.firstRow.watermark_column,' > ','''',variables('watermark_value'),'''')\n        )\n}\n",
 									"type": "Expression"
 								},
 								"queryTimeout": "02:00:00"
@@ -248,6 +242,14 @@
 								"table_name": {
 									"value": "@activity('Read Table Details').output.firstRow.silver_table_name",
 									"type": "Expression"
+								},
+								"merge_key": {
+									"value": "@coalesce(activity('Read Table Details').output.firstRow.merge_keys,'')",
+									"type": "Expression"
+								},
+								"load_type": {
+									"value": "@activity('Read Table Details').output.firstRow.load_type",
+									"type": "Expression"
 								}
 							}
 						},
@@ -291,6 +293,139 @@
 							],
 							"scriptBlockExecutionTimeout": "02:00:00"
 						}
+					},
+					{
+						"name": "Check load type for a table",
+						"description": "If load_type = 'MERGE' then perform incremental load using watermark column. If load_type = 'FULL' then perform full load.",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Read Table Details",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Set start time",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@not(equals(activity('Read Table Details').output.firstRow.load_type,'FULL'))",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "Read Watermark Value",
+									"description": "Read Watermark Value for incremental load",
+									"type": "Lookup",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"sqlReaderQuery": {
+												"value": "select watermark_value from ctrl.watermark where table_id = @{pipeline().parameters.table_id}",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"dataset": {
+											"referenceName": "DS_SQLServer",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									}
+								},
+								{
+									"name": "Store watermark value",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Read Watermark Value",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "watermark_value",
+										"value": {
+											"value": "@activity('Read Watermark Value').output.firstRow.watermark_value",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Check load type and update watermark",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Bronze to silver",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@not(equals(activity('Read Table Details').output.firstRow.load_type,'FULL'))",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "Update watermark value",
+									"description": "Update watermark value if load type is not equal to 'FULL' load.",
+									"type": "Script",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "LS_SQLdb_QNXT",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "Query",
+												"text": {
+													"value": "update ctrl.watermark set watermark_value = SYSUTCDATETIME() where table_id = @{pipeline().parameters.table_id}",
+													"type": "Expression"
+												}
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							]
+						}
 					}
 				],
 				"policy": {
@@ -313,6 +448,9 @@
 					"adls_landing_directory": {
 						"type": "String",
 						"defaultValue": "landing"
+					},
+					"watermark_value": {
+						"type": "String"
 					}
 				},
 				"annotations": []
@@ -379,6 +517,7 @@
 								"value": "@activity('Read Source Tables List').output.value",
 								"type": "Expression"
 							},
+							"isSequential": false,
 							"activities": [
 								{
 									"name": "Ingest from Source to Silver",
@@ -416,7 +555,7 @@
 									"dependsOn": [],
 									"policy": {
 										"timeout": "0.12:00:00",
-										"retry": 2,
+										"retry": 1,
 										"retryIntervalInSeconds": 30,
 										"secureOutput": false,
 										"secureInput": false
@@ -431,7 +570,7 @@
 											{
 												"type": "Query",
 												"text": {
-													"value": "Insert into ctrl.audit_log (adf_run_id, table_id, stage, status, start_time)\nVALUES (@{pipeline().parameters.adf_run_id},@{item().table_id}, 'SOURCE_TO_SILVER', 'IN_PROGRESS', SYSUTCDATETIME())",
+													"value": "Insert into ctrl.audit_log (adf_run_id, table_id, stage, status, start_time)\nVALUES ('@{pipeline().parameters.adf_run_id}',@{item().table_id}, 'SOURCE_TO_SILVER', 'IN_PROGRESS', SYSUTCDATETIME())",
 													"type": "Expression"
 												}
 											}
@@ -452,7 +591,7 @@
 									],
 									"policy": {
 										"timeout": "0.12:00:00",
-										"retry": 2,
+										"retry": 1,
 										"retryIntervalInSeconds": 30,
 										"secureOutput": false,
 										"secureInput": false
