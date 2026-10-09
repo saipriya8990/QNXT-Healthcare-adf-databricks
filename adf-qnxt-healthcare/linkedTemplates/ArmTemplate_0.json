@@ -1579,10 +1579,10 @@
 						"timeZone": "Pacific Standard Time",
 						"schedule": {
 							"minutes": [
-								0
+								35
 							],
 							"hours": [
-								5
+								14
 							]
 						}
 					}
