@@ -1,1 +1,14 @@
-{}
+{
+	"email_recipients": {
+		"type": "string",
+		"value": "saipriya8990@gmail.com"
+	},
+	"env": {
+		"type": "string",
+		"value": "DEV"
+	},
+	"logic_apps_URL": {
+		"type": "string",
+		"value": "https://prod-11.northcentralus.logic.azure.com:443/workflows/8e729ad204374087ac5b608dcf32198c/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=3ujFNTxlljpl2UDhaewrQ9F3h9A_VL24sX0958JW6xE"
+	}
+}
