@@ -1,6 +1,12 @@
 {
 	"name": "adf-qnxt-healthcare",
 	"properties": {
+		"globalParameters": {
+			"email_recipients": {
+				"type": "string",
+				"value": "saipriya8990@gmail.com"
+			}
+		},
 		"trustModeClaimForMi": {
 			"value": "Disabled",
 			"editable": true
