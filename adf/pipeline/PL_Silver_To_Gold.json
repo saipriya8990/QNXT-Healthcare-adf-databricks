@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Read Source Tables List",
+				"name": "Read Source Tables List for Gold tables",
 				"description": "Read Source Tables List from Azure SQL Database",
 				"type": "Lookup",
 				"dependsOn": [],
@@ -37,7 +37,7 @@
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Read Source Tables List",
+						"activity": "Read Source Tables List for Gold tables",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -46,7 +46,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Read Source Tables List').output.value",
+						"value": "@activity('Read Source Tables List for Gold tables').output.value",
 						"type": "Expression"
 					},
 					"isSequential": false,
@@ -139,24 +139,6 @@
 								"notebookPath": {
 									"value": "/qnxthealth-repo/Databricks/Databricks/Gold/NB_@{item().gold_table_name}",
 									"type": "Expression"
-								},
-								"baseParameters": {
-									"landing_timestamp": {
-										"value": "@variables('start_time')",
-										"type": "Expression"
-									},
-									"source_system": {
-										"value": "@activity('Read Table Details').output.firstRow.source_system",
-										"type": "Expression"
-									},
-									"table_name": {
-										"value": "@activity('Read Table Details').output.firstRow.bronze_table_name",
-										"type": "Expression"
-									},
-									"source_file_format": {
-										"value": "@coalesce(activity('Read Table Details').output.firstRow.source_file_format,'')",
-										"type": "Expression"
-									}
 								}
 							},
 							"linkedServiceName": {
