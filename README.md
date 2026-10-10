@@ -374,11 +374,6 @@ notebooks themselves — the `SILVER_TO_GOLD` rows in `table_config` only carry 
   all resolved from **Azure Key Vault** at runtime (`AzureKeyVaultSecret` references).
 - **No storage keys**: Databricks reaches ADLS through a Unity Catalog storage credential
   backed by an Azure access connector (managed identity), and ADF uses its managed identity.
-- ⚠️ **Rotate one secret**: the Logic App callback URL stored in the `logic_apps_URL` factory
-  global parameter contains a SAS signature. If this repo is public, rotate the SAS token in
-  the Logic App and update the parameter (consider moving it into Key Vault).
-- The sample data is synthetic (generated names/dates); the `abc@gmail.com` address in the
-  email footer is a placeholder.
 
 ## Tech stack
 Azure Data Factory · Azure Data Lake Storage Gen2 · Azure SQL Database · Azure Key Vault ·
