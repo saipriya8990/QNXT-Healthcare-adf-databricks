@@ -1,0 +1,98 @@
+{
+    "definition": {
+        "metadata": {
+            "notes": {}
+        },
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "contentVersion": "1.0.0.0",
+        "triggers": {
+            "When_an_HTTP_request_is_received": {
+                "type": "Request",
+                "kind": "Http",
+                "inputs": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "subject": {
+                                "type": "string"
+                            },
+                            "email_recipients": {
+                                "type": "string"
+                            },
+                            "body_header": {
+                                "type": "string"
+                            },
+                            "body_footer": {
+                                "type": "string"
+                            },
+                            "status_table": {
+                                "type": "array"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "actions": {
+            "Send_email_(V2)": {
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['gmail']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "body": {
+                        "To": "@triggerBody()?['email_recipients']",
+                        "Subject": "@triggerBody()?['subject']",
+                        "Body": "<p class=\"editor-paragraph\">@{triggerBody()?['body_header']}</p><p class=\"editor-paragraph\">@{outputs('Compose')}</p><p class=\"editor-paragraph\">@{triggerBody()?['body_footer']}</p>"
+                    },
+                    "path": "/v2/Mail"
+                },
+                "runAfter": {
+                    "Compose": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Create_HTML_table": {
+                "type": "Table",
+                "inputs": {
+                    "from": "@triggerBody()?['status_table']",
+                    "format": "HTML"
+                },
+                "runAfter": {}
+            },
+            "Compose": {
+                "type": "Compose",
+                "inputs": "@replace(body('Create_HTML_table'),'<table>' , '<table border=\"1\">')",
+                "runAfter": {
+                    "Create_HTML_table": [
+                        "SUCCEEDED"
+                    ]
+                }
+            }
+        },
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "type": "Object",
+                "defaultValue": {}
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "type": "Object",
+            "value": {
+                "gmail": {
+                    "id": "/subscriptions/78468491-a3d2-4cc4-a683-e8df2a643257/providers/Microsoft.Web/locations/northcentralus/managedApis/gmail",
+                    "connectionId": "/subscriptions/78468491-a3d2-4cc4-a683-e8df2a643257/resourceGroups/rg_healthcare/providers/Microsoft.Web/connections/gmail",
+                    "connectionName": "gmail",
+                    "connectionProperties": {}
+                }
+            }
+        }
+    }
+}
