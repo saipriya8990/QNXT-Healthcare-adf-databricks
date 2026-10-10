@@ -1,5 +1,5 @@
 /* =====================================================================
-   CareSync Health Network — Control/Metadata Framework
+   QNXT Health Network — Control/Metadata Framework
    Target: Azure SQL Database
    Creates the ctrl schema + 3 control tables, then seeds table_config
    with the 5 source objects (3 Postgres tables + 2 ADLS CSV files)

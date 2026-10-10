@@ -1,5 +1,5 @@
 /* =====================================================================
-   CareSync Health Network - Incremental source load, round 2
+   QNXT Health Network - Incremental source load, round 2
    Target: Neon Postgres (source system, schema: public)
 
    Inserts and updates hospitals, doctors, and patients.
