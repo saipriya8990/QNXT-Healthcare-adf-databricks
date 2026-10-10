@@ -118,7 +118,19 @@ QNXT-Healthcare-adf-databricks/
     │   └── sttm_silver_to_gold.xlsx    # Source-to-target mapping workbook for the gold layer
     ├── 04_Images/
     │   ├── Architecture-Overview.png
-    │   └── landing folder structure.png
+    │   ├── landing folder structure.png
+    │   ├── PL_Master_QNXTHealth.png
+    │   ├── PL_Source_To_Silver_Main.png
+    │   ├── PL_Source_To_Silver_Main_inside_foreachloop.png
+    │   ├── PL_Source_To_Silver_Inner.png
+    │   ├── PL_Silver_To_Gold.png
+    │   ├── PL_Silver_To_Gold_inside_foreachloop.png
+    │   ├── PL_Send_Email.png
+    │   ├── Linked_Servers.png
+    │   ├── DS_ADLS_CSV_Binary.png
+    │   ├── Global_Parameters.png
+    │   ├── Debug_Pipeline_Runs.png
+    │   └── Triggered_Pipeline_Runs.png
     └── 05_ADF_Email_Creation_code/
         ├── Logic Apps creation.json    # Logic App definition (HTTP trigger → HTML table → Gmail)
         └── Email_Screenshot_after_pipeline_run.png
@@ -189,6 +201,8 @@ and an **external location** (`adls-location` → `abfss://landing@qnxthealthcar
 The `landing_volume` volume in the `landing` schema surfaces the ADLS container inside
 Databricks — like a shortcut, no data duplication.
 
+![Landing folder layout in ADLS](Others/04_Images/landing%20folder%20structure.png)
+
 ---
 
 ## Pipeline reference (ADF)
@@ -204,11 +218,16 @@ The ADF Run ID (`@pipeline().RunId`) is passed down as `adf_run_id` so every aud
 the final email tie back to one master run. Fired by the daily schedule trigger
 `TGR_QNXT_Health_DAILY` (2:35 PM Pacific).
 
+![PL_Master_QNXTHealth canvas in ADF Studio](Others/04_Images/PL_Master_QNXTHealth.png)
+
 ### `PL_Source_To_Silver_Main` — fan out per table (one call per source system)
 1. **Read Source Tables List** (Lookup): `select table_id from ctrl.table_config where is_active = 1 and source_system = '<system>'`
 2. **Ingest_All_Tables** (ForEach, parallel): per `table_id` → `PL_Source_To_Silver_Inner`;
    on completion writes `IN_PROGRESS` to the audit log, and on failure marks `FAILED` and
    fails the pipeline.
+
+![PL_Source_To_Silver_Main canvas](Others/04_Images/PL_Source_To_Silver_Main.png)
+![Inside the Ingest_All_Tables ForEach](Others/04_Images/PL_Source_To_Silver_Main_inside_foreachloop.png)
 
 ### `PL_Source_To_Silver_Inner` — the generic per-table pipeline (the core of the demo)
 Takes `table_id` + `adf_run_id`. Everything below is driven by that table's
@@ -233,11 +252,16 @@ Takes `table_id` + `adf_run_id`. Everything below is driven by that table's
    `records_written` from the notebook's return value.
 8. **If load_type ≠ FULL** → advance `ctrl.watermark` to `SYSUTCDATETIME()`.
 
+![PL_Source_To_Silver_Inner canvas](Others/04_Images/PL_Source_To_Silver_Inner.png)
+
 ### `PL_Silver_To_Gold`
 1. **Read Source Tables List for Gold tables** (Lookup): active `SILVER_TO_GOLD` rows.
 2. **ForEach** (parallel): insert `IN_PROGRESS` audit row → run the table's Databricks gold
    notebook → on success update `SUCCESS` + record count; on failure update `FAILED` and
    fail.
+
+![PL_Silver_To_Gold canvas](Others/04_Images/PL_Silver_To_Gold.png)
+![Inside the gold ForEach — audit + notebook + failure path](Others/04_Images/PL_Silver_To_Gold_inside_foreachloop.png)
 
 ### `PL_Send_Email` — automated status reporting
 1. **Read all tables status** (Lookup): all `ctrl.audit_log` rows for this `adf_run_id`.
@@ -246,6 +270,37 @@ Takes `table_id` + `adf_run_id`. Everything below is driven by that table's
 3. **Send Email** (WebActivity POST) to the Logic App URL from the `logic_apps_URL` global
    parameter. The Logic App (`Others/05_ADF_Email_Creation_code/Logic Apps creation.json`)
    builds an HTML table from the results and sends it via Gmail to `email_recipients`.
+
+![PL_Send_Email canvas](Others/04_Images/PL_Send_Email.png)
+
+---
+
+## Proof of execution — screenshots from real runs
+
+**Triggered runs (Monitor → Pipeline runs):** full end-to-end executions of
+`PL_Master_QNXTHealth` on 10/9/2026 — all stages green, master runs completing in
+~6–16 minutes, with per-table child runs underneath.
+
+![Triggered pipeline runs — all succeeded](Others/04_Images/Triggered_Pipeline_Runs.png)
+
+**Debug runs during development:** iterative testing of the individual pipelines
+(10/8–10/9/2026) — including the failed runs that were fixed along the way.
+
+![Debug pipeline runs](Others/04_Images/Debug_Pipeline_Runs.png)
+
+**The actual status email received after a master run** — subject
+`DEV | SUCCESS | QNXT MASTER RUN` with the per-table audit table (all 8 tables SUCCESS,
+gold record counts 6711 / 5003 / 78):
+
+![Status email after a successful master run](Others/05_ADF_Email_Creation_code/Email_Screenshot_after_pipeline_run.png)
+
+---
+
+## ADF configuration screenshots
+
+![Linked services — ADLS, Databricks, Key Vault, Postgres, Azure SQL](Others/04_Images/Linked_Servers.png)
+![Parameterized binary dataset for CSV files](Others/04_Images/DS_ADLS_CSV_Binary.png)
+![Global parameters — recipients, env, Logic App URL](Others/04_Images/Global_Parameters.png)
 
 ---
 
@@ -319,6 +374,11 @@ notebooks themselves — the `SILVER_TO_GOLD` rows in `table_config` only carry 
   all resolved from **Azure Key Vault** at runtime (`AzureKeyVaultSecret` references).
 - **No storage keys**: Databricks reaches ADLS through a Unity Catalog storage credential
   backed by an Azure access connector (managed identity), and ADF uses its managed identity.
+- ⚠️ **Rotate one secret**: the Logic App callback URL stored in the `logic_apps_URL` factory
+  global parameter contains a SAS signature. If this repo is public, rotate the SAS token in
+  the Logic App and update the parameter (consider moving it into Key Vault).
+- The sample data is synthetic (generated names/dates); the `abc@gmail.com` address in the
+  email footer is a placeholder.
 
 ## Tech stack
 Azure Data Factory · Azure Data Lake Storage Gen2 · Azure SQL Database · Azure Key Vault ·
